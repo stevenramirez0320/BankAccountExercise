@@ -1,0 +1,76 @@
+<beans 	xmlns="http://www.springframework.org/schema/beans" 
+		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+		xmlns:task="http://www.springframework.org/schema/task"
+		xmlns:tx="http://www.springframework.org/schema/tx"
+		xmlns:context="http://www.springframework.org/schema/context"
+		xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+							http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task-3.2.xsd
+							http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd
+							http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.2.xsd">
+
+	<bean id="placeholderConfig" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="locations">
+			<list>
+				<value>classpath:jdbc.properties</value>
+			</list>
+		</property>
+	</bean>
+	<task:annotation-driven />
+	<context:annotation-config/>
+	<context:component-scan base-package="com.conex.bank" />
+
+	<bean id="hikariConfigParent" class="com.zaxxer.hikari.HikariConfig" abstract="true">
+		<property name="maximumPoolSize" value="${dbcp.maximumPoolSize}" />
+		<property name="minimumIdle" value="${dbcp.minimumIdle}" />
+		<property name="dataSourceClassName" value="${jdbc.class.name}" />
+		<property name="connectionTimeout" value="${dbcp.connectionTimeout}" />
+		<property name="idleTimeout" value="${dbcp.idleTimeout}" />
+		<property name="maxLifetime" value="${dbcp.maxLifetime}" />
+		<property name="connectionTestQuery" value="${dbcp.connectionTestQuery}" />
+		<property name="dataSourceProperties">
+			<props>
+				<prop key="cachePrepStmts">${dbcp.dataSource.cachePrepStmts}</prop>
+				<prop key="prepStmtCacheSize">${dbcp.dataSource.prepStmtCacheSize}</prop>
+				<prop key="prepStmtCacheSqlLimit">${dbcp.dataSource.prepStmtCacheSqlLimit}</prop>
+				<prop key="useServerPrepStmts">${dbcp.dataSource.useServerPrepStmts}</prop>
+			</props>
+		</property>
+	</bean>
+
+	<bean id="hikariConfig" parent="hikariConfigParent">
+		<property name="dataSourceProperties">
+			<props merge="true">
+				<prop key="url">${master.jdbc.url}</prop>
+				<prop key="user">${master.jdbc.username}</prop>
+				<prop key="password">${master.jdbc.password}</prop>
+			</props>
+		</property>
+	</bean>
+
+	<!-- master dataSource configuration -->
+	<bean id="masterDataSource" class="com.zaxxer.hikari.HikariDataSource" destroy-method="shutdown">
+		<constructor-arg ref="hikariConfig" />
+	</bean>
+	<bean id="masterSessionFactory" class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
+		<property name="dataSource" ref="masterDataSource" />
+		<property name="hibernateProperties">
+			<props>
+				<prop key="hibernate.dialect">${db.dialect}</prop>
+				<prop key="hibernate.show_sql">${db.show_sql}</prop>
+			</props>
+		</property>
+	</bean>
+	<bean id="transactionManager" class="org.springframework.orm.hibernate4.HibernateTransactionManager">
+		<property name="sessionFactory" ref="masterSessionFactory" />
+	</bean>
+
+	<!-- Transaction configuration -->
+	<tx:advice id="txAdvice" transaction-manager="transactionManager">
+		<tx:attributes>
+			<tx:method name="*" />
+			<tx:method name="get*" read-only="true" />
+		</tx:attributes>
+	</tx:advice>
+	<tx:annotation-driven transaction-manager="transactionManager" />
+
+</beans>
