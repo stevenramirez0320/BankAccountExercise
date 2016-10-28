@@ -2,12 +2,12 @@ package com.conex.bank.service;
 
 import java.math.BigDecimal;
 
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.conex.bank.dto.TransferResultDto;
 
-@Service
+@Repository
 public class TransferAmountService implements Runnable {
 
 	private TransferResultDto transferResultDto;
