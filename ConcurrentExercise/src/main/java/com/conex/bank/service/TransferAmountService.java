@@ -18,7 +18,7 @@ public class TransferAmountService{
 	private TransferAmountDao transferAmountDao;
 
 	@Transactional(value = "transactionManager")
-	public synchronized TransferResultDto transferAmount(Long accountIdFrom, Long accountIdTo, BigDecimal amount) {
+	public TransferResultDto transferAmount(Long accountIdFrom, Long accountIdTo, BigDecimal amount) {
 		BankAccount bankAccount = transferAmountDao.transferAmount(accountIdFrom, accountIdTo, amount);
 		TransferResultDto transferResultDto = new TransferResultDto();
 		transferResultDto.setAccountName(bankAccount.getAccountName());

@@ -15,9 +15,12 @@ public class TransferAmountDao extends BaseDao{
 		Session session = sessionFactory.openSession();
 		BankAccount  bankAccountFrom =  get(session,BankAccount.class, accountIdFrom);
 		bankAccountFrom.setAmount(bankAccountFrom.getAmount().subtract(amount));
+		
 		update(session,bankAccountFrom);
+		
 		BankAccount  bankAccountTo =  get(session,BankAccount.class, accountIdTo);
         bankAccountTo.setAmount(bankAccountTo.getAmount().add(amount));
+        
         update(session,bankAccountTo);
         session.flush();
         session.close();
