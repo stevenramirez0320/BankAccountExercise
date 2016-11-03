@@ -7,9 +7,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.conex.bank.dto.BaseDataOut;
 import com.conex.bank.dto.IntegrationErrorCode;
+import com.conex.bank.runnable.TransferAmountThread;
 import com.conex.bank.service.TransferAmountService;
 
 @Controller
@@ -18,32 +20,29 @@ public class BankController extends BaseController {
 	
 	@Autowired
 	private TransferAmountService transferAmountService;
-	private BigDecimal amount;
+	private BigDecimal transferAmt;
 
-	@RequestMapping("/transferAmount")
-	public BaseDataOut getMovie(@RequestParam("accountNameFrom") String accountNameFrom, @RequestParam("accountNameTo") String accountNameTo, @RequestParam("amount") String amountStr) throws IOException {
-		IntegrationErrorCode integrationErrorCode = validateAmount(amountStr);
+	@RequestMapping(value = "/transferAmount")
+	@ResponseBody
+	public BaseDataOut getMovie(@RequestParam("accountIdFrom") Long accountIdFrom, @RequestParam("accountIdTo") Long accountIdTo, @RequestParam("transferAmtStr") String transferAmtStr) throws IOException, InterruptedException {
+		IntegrationErrorCode integrationErrorCode = validateAmount(transferAmtStr);
 		if (integrationErrorCode != null) {
 			return writeErrorDataOut(integrationErrorCode);
 		} else {	
-			return writeSuccessDataOut(transferAmountService.transferAmount(accountNameFrom, accountNameTo, amount));
+			TransferAmountThread transferAmountThread = new TransferAmountThread(accountIdFrom, accountIdTo, transferAmt, transferAmountService);
+			transferAmountThread.start();
+			transferAmountThread.join();
+			return writeSuccessDataOut(transferAmountThread.getTransferResultDto());
 		}
-
 	}
 	
 	private IntegrationErrorCode validateAmount(String amountStr) {
 		try {
-			amount = new BigDecimal(amountStr);
+			transferAmt = new BigDecimal(amountStr);
 		} catch (NumberFormatException e) {
 			return IntegrationErrorCode._1001;
 		}
 		return null;
-        
     }
 	
-	public static void main(String[] args) {
-		BigDecimal amount = new BigDecimal("sfdf");
-		System.out.println(amount);
-	}
-
 }

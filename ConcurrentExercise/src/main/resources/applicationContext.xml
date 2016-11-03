@@ -16,8 +16,8 @@
 		</property>
 	</bean>
 	<task:annotation-driven />
-	<context:annotation-config/>
 	<context:component-scan base-package="com.conex.bank" />
+	<context:annotation-config/>
 
 	<bean id="hikariConfigParent" class="com.zaxxer.hikari.HikariConfig" abstract="true">
 		<property name="maximumPoolSize" value="${dbcp.maximumPoolSize}" />
@@ -38,6 +38,7 @@
 	</bean>
 
 	<bean id="hikariConfig" parent="hikariConfigParent">
+		<property name="readOnly" value="false" />
 		<property name="dataSourceProperties">
 			<props merge="true">
 				<prop key="url">${master.jdbc.url}</prop>
@@ -53,6 +54,11 @@
 	</bean>
 	<bean id="masterSessionFactory" class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
 		<property name="dataSource" ref="masterDataSource" />
+		<property name="packagesToScan">
+			<list>
+				<value>com.conex.bank.entity</value>
+			</list>
+		</property>
 		<property name="hibernateProperties">
 			<props>
 				<prop key="hibernate.dialect">${db.dialect}</prop>
@@ -68,9 +74,7 @@
 	<tx:advice id="txAdvice" transaction-manager="transactionManager">
 		<tx:attributes>
 			<tx:method name="*" />
-			<tx:method name="get*" read-only="true" />
 		</tx:attributes>
 	</tx:advice>
 	<tx:annotation-driven transaction-manager="transactionManager" />
-
 </beans>

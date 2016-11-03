@@ -2,25 +2,27 @@ package com.conex.bank.service;
 
 import java.math.BigDecimal;
 
-import org.springframework.stereotype.Repository;
+import javax.inject.Named;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.conex.bank.dao.TransferAmountDao;
 import com.conex.bank.dto.TransferResultDto;
+import com.conex.bank.entity.BankAccount;
 
-@Repository
-public class TransferAmountService implements Runnable {
+@Named
+public class TransferAmountService{
 
-	private TransferResultDto transferResultDto;
+	@Autowired
+	private TransferAmountDao transferAmountDao;
 
-	@Transactional(value = "transactionManager", readOnly = true)
-	public TransferResultDto transferAmount(
-			String accountNameFrom, String accountNameTo, BigDecimal amount) {
-		run();
+	@Transactional(value = "transactionManager")
+	public synchronized TransferResultDto transferAmount(Long accountIdFrom, Long accountIdTo, BigDecimal amount) {
+		BankAccount bankAccount = transferAmountDao.transferAmount(accountIdFrom, accountIdTo, amount);
+		TransferResultDto transferResultDto = new TransferResultDto();
+		transferResultDto.setAccountName(bankAccount.getAccountName());
+		transferResultDto.setCurrentAmount(bankAccount.getAmount().toString());
 		return transferResultDto;
-	}
-
-	@Override
-	public void run() {
-		TransferResultDto result = new TransferResultDto();
 	}
 }
