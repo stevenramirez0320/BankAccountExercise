@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.conex.bank.dto.BaseDataOut;
 import com.conex.bank.dto.IntegrationErrorCode;
-import com.conex.bank.runnable.TransferAmountThread;
 import com.conex.bank.service.TransferAmountService;
 
 @Controller
@@ -28,11 +27,8 @@ public class BankController extends BaseController {
 		IntegrationErrorCode integrationErrorCode = validateAmount(transferAmtStr);
 		if (integrationErrorCode != null) {
 			return writeErrorDataOut(integrationErrorCode);
-		} else {	
-			TransferAmountThread transferAmountThread = new TransferAmountThread(accountIdFrom, accountIdTo, transferAmt, transferAmountService);
-			transferAmountThread.start();
-			transferAmountThread.join();
-			return writeSuccessDataOut(transferAmountThread.getTransferResultDto());
+		} else {
+			return writeSuccessDataOut(transferAmountService.transferAmount(accountIdFrom, accountIdTo, transferAmt));
 		}
 	}
 	
